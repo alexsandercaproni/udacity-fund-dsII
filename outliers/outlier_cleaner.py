@@ -10,11 +10,26 @@ def outlierCleaner(predictions, ages, net_worths):
         Return a list of tuples named cleaned_data where 
         each tuple is of the form (age, net_worth, error).
     """
-    
+    import math
+
     cleaned_data = []
 
-    ### your code goes here
+    sortedError = []
+    for i in range(len(predictions)):
+        sortedError.extend(abs(predictions[i] - net_worths[i]))
 
-    
+    sortedError.sort()
+
+    keeperCount = int(math.floor(len(sortedError)*0.9))
+
+    topErrors = sortedError[keeperCount:]
+
+    for i in range(len(predictions)):
+        error = abs(predictions[i] - net_worths[i])
+        if error in topErrors:
+            pass
+        else:
+            cleaned_data.append([ages[i], net_worths[i], error])
+
     return cleaned_data
 

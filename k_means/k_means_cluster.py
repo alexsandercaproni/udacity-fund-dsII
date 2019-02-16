@@ -4,18 +4,12 @@
     Skeleton code for k-means clustering mini-project.
 """
 
-
-
-
 import pickle
 import numpy
 import matplotlib.pyplot as plt
 import sys
 sys.path.append("../tools/")
 from feature_format import featureFormat, targetFeatureSplit
-
-
-
 
 def Draw(pred, features, poi, mark_poi=False, name="image.png", f1_name="feature 1", f2_name="feature 2"):
     """ some plotting code designed to help you visualize your clusters """
@@ -39,7 +33,7 @@ def Draw(pred, features, poi, mark_poi=False, name="image.png", f1_name="feature
 
 
 ### load in the dict of dicts containing all the data on each person in the dataset
-data_dict = pickle.load( open("../final_project/final_project_dataset.pkl", "r") )
+data_dict = pickle.load( open("../final_project/final_project_dataset.pkl", "r"))
 ### there's an outlier--remove it! 
 data_dict.pop("TOTAL", 0)
 
@@ -48,10 +42,12 @@ data_dict.pop("TOTAL", 0)
 ### can be any key in the person-level dictionary (salary, director_fees, etc.) 
 feature_1 = "salary"
 feature_2 = "exercised_stock_options"
-poi  = "poi"
+poi = "poi"
+total_payments = "total_payments"
+
 features_list = [poi, feature_1, feature_2]
-data = featureFormat(data_dict, features_list )
-poi, finance_features = targetFeatureSplit( data )
+data = featureFormat(data_dict, features_list)
+poi, finance_features = targetFeatureSplit(data)
 
 
 ### in the "clustering with 3 features" part of the mini-project,
@@ -59,13 +55,16 @@ poi, finance_features = targetFeatureSplit( data )
 ### for f1, f2, _ in finance_features:
 ### (as it's currently written, the line below assumes 2 features)
 for f1, f2 in finance_features:
-    plt.scatter( f1, f2 )
+    plt.scatter(f1, f2)
 plt.show()
 
 ### cluster here; create predictions of the cluster labels
 ### for the data and store them to a list called pred
+from sklearn.cluster import KMeans
 
-
+kmeans = KMeans(n_clusters=2, random_state=0)
+kmeans.fit(finance_features)
+pred = kmeans.predict(finance_features)
 
 
 ### rename the "name" parameter when you change the number of features
@@ -74,3 +73,47 @@ try:
     Draw(pred, finance_features, poi, mark_poi=False, name="clusters.pdf", f1_name=feature_1, f2_name=feature_2)
 except NameError:
     print "no predictions object named pred found, no clusters to plot"
+
+#Getting max and min exercised stock
+stock = []
+for i in data_dict:
+    if (data_dict[i]["exercised_stock_options"] != 'NaN'):
+        stock.append(float(data_dict[i]["exercised_stock_options"]))
+
+maxStock = max(stock)
+minStock = min(stock)
+
+print "Exercised stock options maximum: ", maxStock, " minimum: ", minStock
+
+#Getting max and min salary
+salary = []
+for i in data_dict:
+    if(data_dict[i]["salary"] != 'NaN'):
+        salary.append(float(data_dict[i]["salary"]))
+
+maxSalary = max(salary)
+minSalary = min(salary)
+
+print "Salary maximum: ", maxSalary, " minimum: ", minSalary
+
+#Escalonamento de Caracteristicas - canonico
+print "Canonic Salary Scalling: ", float(200000-minSalary)/(maxSalary-minSalary)
+print "Canonic Stock Scalling: ",float(1000000-minStock)/(maxStock-minStock)
+
+#Escalonamento de Caracteristicas - canonic
+from sklearn.preprocessing import MinMaxScaler
+import numpy as np
+
+#Necessary numpy float array
+salaryScaler = np.array(salary).astype(float).reshape(-1,1)
+stockScaler = np.array(stock).astype(float).reshape(-1,1)
+
+#Creating scaler
+scaler = MinMaxScaler()
+
+#Escalonamento de Caracteristicas
+rescaledSalary = scaler.fit_transform(salaryScaler)
+rescaledStock = scaler.fit_transform(stockScaler)
+
+print "Canonic Salary Scalling: ", rescaledSalary
+print "Canonic Stock Scalling: ", rescaledStock
